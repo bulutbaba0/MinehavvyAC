@@ -1,5 +1,8 @@
 name: Build MineHavvyAC
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - '*.jar'
 permissions:
   contents: write
 
