@@ -101,7 +101,7 @@ public class MineHavvyAC extends JavaPlugin implements CommandExecutor {
         List<Llama> llamas = new ArrayList<>();
         double[][] offsets = {{2.5, 0}, {-2.5, 0}, {0, 2.5}, {0, -2.5}};
         for (double[] off : offsets) {
-            Location llamaLoc = baseLoc.clone().add(off, 0, off);
+            Location llamaLoc = baseLoc.clone().add(off[0], 0, off[1]);
             Llama llama = (Llama) player.getWorld().spawnEntity(llamaLoc, EntityType.LLAMA);
             llama.setAI(false);
             llama.setInvulnerable(true);
