@@ -14,15 +14,15 @@
 
     <repositories>
         <repository>
-            <id>spigot-repo</id>
-            <url>https://spigotmc.org</url>
+            <id>purpurmc</id>
+            <url>https://purpurmc.org</url>
         </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
+            <groupId>org.purpurmc.purpur</groupId>
+            <artifactId>purpur-api</artifactId>
             <version>1.21.4-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
