@@ -1,16 +1,20 @@
 name: Build MineHavvyAC
 on: [push]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-      - name: Compile Plugin Directly
+
+      - name: Compile Plugin
         run: |
           mkdir -p stub/org/bukkit/block stub/org/bukkit/command stub/org/bukkit/entity stub/org/bukkit/event/block stub/org/bukkit/event/entity stub/org/bukkit/event/player stub/org/bukkit/plugin/java stub/org/bukkit/scheduler stub/org/bukkit/util build/classes
 
@@ -250,6 +254,3 @@ jobs:
           public class PlayerInteractEvent extends Event {
               public Action getAction() { return null; }
               public Player getPlayer() { return null; }
-          }
-          EOF
-
