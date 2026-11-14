@@ -1,86 +1,59 @@
 package com.minehavvy.ac;
 
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.util.Vector;
+import org.bukkit.event.player.PlayerMoveEvent;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class CombatChecks implements Listener {
+public class MovementChecks implements Listener {
 
     private final MineHavvyAC plugin;
-    private final Map<UUID, List<Long>> clicks = new HashMap<>();
+    private final Map<UUID, Integer> airTicks = new HashMap<>();
 
-    public CombatChecks(MineHavvyAC plugin) {
+    public MovementChecks(MineHavvyAC plugin) {
         this.plugin = plugin;
     }
 
     @EventHandler
-    public void onHit(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player attacker)) return;
-        if (plugin.isBeingPunished(attacker.getUniqueId())) {
-            event.setCancelled(true);
-            return;
-        }
-        if (attacker.getGameMode() == GameMode.CREATIVE) return;
-
-        double distance = attacker.getEyeLocation().distance(event.getEntity().getLocation());
-        Vector toTarget = event.getEntity().getLocation().toVector().subtract(attacker.getEyeLocation().toVector()).normalize();
-        Vector lookDir = attacker.getEyeLocation().getDirection().normalize();
-        double angle = lookDir.angle(toTarget);
-
-        // 1. ELYTRA TARGET KONTROLÜ
-        if (attacker.isGliding()) {
-            if (angle > 0.85 || distance > 3.6) {
-                event.setCancelled(true);
-                String angleDeg = String.format("%.1f", Math.toDegrees(angle));
-                plugin.flag(attacker, "ElytraTarget", "(Açı: " + angleDeg + "°)", 4, "Elytra Target Hilesi");
-                return;
-            }
-        }
-
-        // 2. KILLAURA (BAKIŞ AÇISI / ARKAYA VURMA) KONTROLÜ
-        if (distance > 1.8 && angle > 1.15) {
-            event.setCancelled(true);
-            String angleDeg = String.format("%.1f", Math.toDegrees(angle));
-            plugin.flag(attacker, "KillAura", "(Bakış Sapması: " + angleDeg + "°)", 6, "Savaş Hilesi (KillAura)");
-            return;
-        }
-
-        // 3. REACH (UZAKTAN VURMA) KONTROLÜ
-        double maxReach = 3.45;
-        if (distance > maxReach) {
-            event.setCancelled(true);
-            String distStr = String.format("%.2f", distance);
-            plugin.flag(attacker, "Reach", "(Mesafe: " + distStr + "m)", 8, "Uzaktan Vurma (Reach)");
-        }
-    }
-
-    @EventHandler
-    public void onClick(PlayerInteractEvent event) {
-        if (event.getAction() != Action.LEFT_CLICK_AIR && event.getAction() != Action.LEFT_CLICK_BLOCK) return;
-
+    public void onMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
+        if (plugin.isBeingPunished(player.getUniqueId())) return;
+        if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) return;
+        if (player.isFlying() || player.isGliding() || player.isInsideVehicle()) return;
+
         UUID uuid = player.getUniqueId();
-        long now = System.currentTimeMillis();
+        double deltaX = event.getTo().getX() - event.getFrom().getX();
+        double deltaZ = event.getTo().getZ() - event.getFrom().getZ();
+        double deltaY = event.getTo().getY() - event.getFrom().getY();
+        double horizontalSpeed = Math.hypot(deltaX, deltaZ);
 
-        clicks.putIfAbsent(uuid, new ArrayList<>());
-        List<Long> playerClicks = clicks.get(uuid);
-        playerClicks.add(now);
+        // 1. SPEED (HIZ HİLESİ) KONTROLÜ
+        if (horizontalSpeed > 0.85 && deltaY <= 0.42) {
+            event.setCancelled(true);
+            String speedStr = String.format("%.2f", horizontalSpeed);
+            plugin.flag(player, "Speed", "(Hız: " + speedStr + ")", 10, "Hız Hilesi (Speed)");
+            return;
+        }
 
-        playerClicks.removeIf(time -> now - time > 1000);
+        // 2. FLY (UÇMA HİLESİ) KONTROLÜ
+        boolean onGround = player.getLocation().subtract(0, 0.2, 0).getBlock().getType() != Material.AIR;
+        if (onGround) {
+            airTicks.put(uuid, 0);
+            return;
+        }
 
-        if (playerClicks.size() > 22) {
-            plugin.flag(player, "AutoClicker", "(CPS: " + playerClicks.size() + ")", 10, "Makro / AutoClicker");
+        int ticks = airTicks.getOrDefault(uuid, 0) + 1;
+        airTicks.put(uuid, ticks);
+
+        if (ticks > 25 && deltaY >= 0.0 && player.getVelocity().getY() <= 0) {
+            event.setCancelled(true);
+            plugin.flag(player, "Fly", "(Havada kalma: " + ticks + " tick)", 12, "Uçma Hilesi (Fly)");
         }
     }
 }
