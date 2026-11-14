@@ -1,7 +1,5 @@
 package com.minehavvy.ac;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,13 +11,12 @@ import java.util.UUID;
 public class MineHavvyAC extends JavaPlugin {
 
     private final Map<UUID, Integer> violations = new HashMap<>();
-    private final MiniMessage mm = MiniMessage.miniMessage();
 
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(new CombatChecks(this), this);
         getServer().getPluginManager().registerEvents(new MovementChecks(this), this);
-        getLogger().info("MineHavvyAC başarıyla aktif edildi!");
+        getLogger().info("MineHavvyAC basariyla aktif edildi!");
     }
 
     public void flag(Player player, String checkName, String details, int maxVl, String banReason) {
@@ -29,10 +26,8 @@ public class MineHavvyAC extends JavaPlugin {
         int currentVl = violations.getOrDefault(uuid, 0) + 1;
         violations.put(uuid, currentVl);
 
-        Component alert = mm.deserialize(
-            "<dark_gray>[<gold><bold>MineHavvy AC</bold><dark_gray>] <yellow>" + player.getName() +
-            " <red>" + checkName + " <gray>şüphesi <dark_gray>(<red>" + currentVl + "/" + maxVl + " VL<dark_gray>) <gray>" + details
-        );
+        String alert = "§8[§6§lMineHavvy AC§8] §e" + player.getName() +
+                " §c" + checkName + " §7şüphesi §8(§c" + currentVl + "/" + maxVl + " VL§8) §7" + details;
 
         for (Player staff : Bukkit.getOnlinePlayers()) {
             if (staff.hasPermission("minehavvy.ac.alerts")) {
