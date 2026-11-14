@@ -26,17 +26,18 @@ public class MineHavvyAC extends JavaPlugin implements CommandExecutor {
 
     private final Map<UUID, Integer> violations = new HashMap<>();
     private final Set<UUID> punishing = new HashSet<>();
+    private final Set<UUID> fallProtection = new HashSet<>();
     private final Set<UUID> alertsDisabled = new HashSet<>();
 
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(new CombatChecks(this), this);
         getServer().getPluginManager().registerEvents(new MovementChecks(this), this);
+        getServer().getPluginManager().registerEvents(new PunishmentListener(this), this);
         if (getCommand("mhac") != null) {
             getCommand("mhac").setExecutor(this);
         }
 
-        // Her 15 saniyede bir oyuncuların uyarı puanını (VL) 1 azalt (Yanlış ban önleyici)
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -51,11 +52,15 @@ public class MineHavvyAC extends JavaPlugin implements CommandExecutor {
             }
         }.runTaskTimer(this, 300L, 300L);
 
-        getLogger().info("MineHavvyAC v2.0 (Pro) basariyla aktif edildi!");
+        getLogger().info("MineHavvyAC v2.1 (Fixli) basariyla aktif edildi!");
     }
 
     public boolean isBeingPunished(UUID uuid) {
         return punishing.contains(uuid);
+    }
+
+    public boolean hasFallProtection(UUID uuid) {
+        return fallProtection.contains(uuid);
     }
 
     public void flag(Player player, String checkName, String details, int maxVl, String banReason) {
@@ -85,6 +90,7 @@ public class MineHavvyAC extends JavaPlugin implements CommandExecutor {
         UUID uuid = player.getUniqueId();
         if (punishing.contains(uuid)) return;
         punishing.add(uuid);
+        fallProtection.add(uuid);
 
         if (executeBan) {
             Bukkit.broadcastMessage("§8§m----------------------------------------");
@@ -97,6 +103,7 @@ public class MineHavvyAC extends JavaPlugin implements CommandExecutor {
         player.teleport(baseLoc);
         player.setAllowFlight(true);
         player.setFlying(true);
+        player.setInvulnerable(true);
 
         List<Llama> llamas = new ArrayList<>();
         double[][] offsets = {{2.5, 0}, {-2.5, 0}, {0, 2.5}, {0, -2.5}};
@@ -122,18 +129,27 @@ public class MineHavvyAC extends JavaPlugin implements CommandExecutor {
                     if (player.isOnline()) {
                         player.setFlying(false);
                         player.setAllowFlight(false);
+                        player.setInvulnerable(false);
+                        player.setFallDistance(0f);
+
+                        // Test bitince yere düşerken 4 saniye boyunca düşme hasarını engelle
+                        Bukkit.getScheduler().runTaskLater(MineHavvyAC.this, () -> fallProtection.remove(uuid), 80L);
+
                         if (executeBan) {
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
                                     "ban " + player.getName() + " 14d [MineHavvyAC] " + banReason);
                         } else {
                             player.sendMessage("§8[§6§lMineHavvy AC§8] §aTest animasyonu tamamlandı (Ban atılmadı).");
                         }
+                    } else {
+                        fallProtection.remove(uuid);
                     }
                     cancel();
                     return;
                 }
 
                 player.setVelocity(new Vector(0, 0, 0));
+                player.setFallDistance(0f);
 
                 if (ticks % 20 == 0) {
                     player.sendTitle("§c§lHİLE AÇTIĞIN İÇİN", "§e§lMUTLU MUSUN?", 0, 25, 5);
@@ -165,7 +181,7 @@ public class MineHavvyAC extends JavaPlugin implements CommandExecutor {
 
         if (args.length == 0) {
             sender.sendMessage("§8§m----------------------------------------");
-            sender.sendMessage("§6§lMineHavvy AC v2.0 §8- §7Yönetim Komutları");
+            sender.sendMessage("§6§lMineHavvy AC v2.1 §8- §7Yönetim Komutları");
             sender.sendMessage("§e/mhac alerts §8- §7Hile uyarılarını açar/kapatır.");
             sender.sendMessage("§e/mhac test <oyuncu> §8- §7Lama cezasını bansız test eder.");
             sender.sendMessage("§e/mhac temizle <oyuncu> §8- §7Oyuncunun uyarı puanını sıfırlar.");
