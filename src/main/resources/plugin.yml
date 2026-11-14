@@ -1,0 +1,16 @@
+name: MineHavvyAC
+version: 1.0.0
+main: com.minehavvy.ac.MineHavvyAC
+api-version: '1.21'
+author: MineHavvy
+commands:
+  mhac:
+    description: MineHavvy Hile Koruması ana komutu
+    permission: minehavvy.ac.admin
+permissions:
+  minehavvy.ac.alerts:
+    description: Hile uyarılarını görme yetkisi
+    default: op
+  minehavvy.ac.bypass:
+    description: Hile korumasından muaf olma yetkisi
+    default: false
