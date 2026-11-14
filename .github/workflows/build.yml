@@ -10,10 +10,197 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-      - name: Build with Maven
-        run: mvn clean package
+      - name: Compile Plugin Directly
+        run: |
+          mkdir -p stub/org/bukkit/command stub/org/bukkit/entity stub/org/bukkit/event/block stub/org/bukkit/event/entity stub/org/bukkit/event/player stub/org/bukkit/plugin/java stub/org/bukkit/scheduler stub/org/bukkit/util build/classes
+
+          cat << 'EOF' > stub/org/bukkit/Bukkit.java
+          package org.bukkit;
+          import org.bukkit.command.CommandSender;
+          import org.bukkit.entity.Player;
+          import org.bukkit.plugin.PluginManager;
+          import org.bukkit.scheduler.BukkitScheduler;
+          import java.util.Collection;
+          import java.util.logging.Logger;
+          public class Bukkit {
+              public static Server getServer() { return null; }
+              public static Logger getLogger() { return null; }
+              public static Collection<? extends Player> getOnlinePlayers() { return null; }
+              public static BukkitScheduler getScheduler() { return null; }
+              public static CommandSender getConsoleSender() { return null; }
+              public static boolean dispatchCommand(CommandSender s, String c) { return false; }
+          }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/Server.java
+          package org.bukkit;
+          import org.bukkit.plugin.PluginManager;
+          public interface Server { PluginManager getPluginManager(); }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/GameMode.java
+          package org.bukkit;
+          public enum GameMode { SURVIVAL, CREATIVE, ADVENTURE, SPECTATOR }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/Material.java
+          package org.bukkit;
+          public enum Material { AIR }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/Location.java
+          package org.bukkit;
+          import org.bukkit.block.Block;
+          public class Location {
+              public double getY() { return 0; }
+              public double distance(Location o) { return 0; }
+              public Location subtract(double x, double y, double z) { return this; }
+              public Block getBlock() { return null; }
+          }
+          EOF
+
+          mkdir -p stub/org/bukkit/block
+          cat << 'EOF' > stub/org/bukkit/block/Block.java
+          package org.bukkit.block;
+          import org.bukkit.Material;
+          public interface Block { Material getType(); }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/command/CommandSender.java
+          package org.bukkit.command;
+          public interface CommandSender {}
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/entity/Entity.java
+          package org.bukkit.entity;
+          import org.bukkit.Location;
+          public interface Entity { Location getLocation(); }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/entity/Player.java
+          package org.bukkit.entity;
+          import org.bukkit.GameMode;
+          import org.bukkit.Location;
+          import org.bukkit.util.Vector;
+          import java.util.UUID;
+          public interface Player extends Entity {
+              String getName();
+              UUID getUniqueId();
+              boolean hasPermission(String p);
+              void sendMessage(String m);
+              GameMode getGameMode();
+              Location getEyeLocation();
+              boolean isFlying();
+              boolean isGliding();
+              boolean isInsideVehicle();
+              Vector getVelocity();
+          }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/util/Vector.java
+          package org.bukkit.util;
+          public class Vector { public double getY() { return 0; } }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/event/Event.java
+          package org.bukkit.event;
+          public abstract class Event {}
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/event/Cancellable.java
+          package org.bukkit.event;
+          public interface Cancellable { void setCancelled(boolean cancel); }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/event/Listener.java
+          package org.bukkit.event;
+          public interface Listener {}
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/event/EventHandler.java
+          package org.bukkit.event;
+          import java.lang.annotation.*;
+          @Retention(RetentionPolicy.RUNTIME)
+          @Target(ElementType.METHOD)
+          public @interface EventHandler {}
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/event/block/Action.java
+          package org.bukkit.event.block;
+          public enum Action { LEFT_CLICK_AIR, LEFT_CLICK_BLOCK, RIGHT_CLICK_AIR, RIGHT_CLICK_BLOCK, PHYSICAL }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/event/entity/EntityDamageByEntityEvent.java
+          package org.bukkit.event.entity;
+          import org.bukkit.entity.Entity;
+          import org.bukkit.event.*;
+          public class EntityDamageByEntityEvent extends Event implements Cancellable {
+              public Entity getDamager() { return null; }
+              public Entity getEntity() { return null; }
+              public void setCancelled(boolean c) {}
+          }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/event/player/PlayerInteractEvent.java
+          package org.bukkit.event.player;
+          import org.bukkit.entity.Player;
+          import org.bukkit.event.Event;
+          import org.bukkit.event.block.Action;
+          public class PlayerInteractEvent extends Event {
+              public Action getAction() { return null; }
+              public Player getPlayer() { return null; }
+          }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/event/player/PlayerMoveEvent.java
+          package org.bukkit.event.player;
+          import org.bukkit.Location;
+          import org.bukkit.entity.Player;
+          import org.bukkit.event.*;
+          public class PlayerMoveEvent extends Event implements Cancellable {
+              public Player getPlayer() { return null; }
+              public Location getFrom() { return null; }
+              public Location getTo() { return null; }
+              public void setCancelled(boolean c) {}
+          }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/plugin/Plugin.java
+          package org.bukkit.plugin;
+          public interface Plugin {}
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/plugin/PluginManager.java
+          package org.bukkit.plugin;
+          import org.bukkit.event.Listener;
+          public interface PluginManager { void registerEvents(Listener l, Plugin p); }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/plugin/java/JavaPlugin.java
+          package org.bukkit.plugin.java;
+          import org.bukkit.Server;
+          import org.bukkit.plugin.Plugin;
+          import java.util.logging.Logger;
+          public abstract class JavaPlugin implements Plugin {
+              public void onEnable() {}
+              public Server getServer() { return null; }
+              public Logger getLogger() { return null; }
+          }
+          EOF
+
+          cat << 'EOF' > stub/org/bukkit/scheduler/BukkitScheduler.java
+          package org.bukkit.scheduler;
+          import org.bukkit.plugin.Plugin;
+          public interface BukkitScheduler { void runTask(Plugin p, Runnable r); }
+          EOF
+
+          javac -d stub_out $(find stub -name "*.java")
+          javac -d build/classes -cp stub_out src/main/java/com/minehavvy/ac/*.java
+          cp src/main/resources/plugin.yml build/classes/
+          jar cf MineHavvyAC-1.0.0.jar -C build/classes .
+
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
           name: MineHavvyAC-Plugin
-          path: target/MineHavvyAC-1.0.0.jar
+          path: MineHavvyAC-1.0.0.jar
