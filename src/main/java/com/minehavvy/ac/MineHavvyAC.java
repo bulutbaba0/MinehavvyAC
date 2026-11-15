@@ -132,7 +132,6 @@ public class MineHavvyAC extends JavaPlugin implements CommandExecutor {
                         player.setInvulnerable(false);
                         player.setFallDistance(0f);
 
-                        // Test bitince yere düşerken 4 saniye boyunca düşme hasarını engelle
                         Bukkit.getScheduler().runTaskLater(MineHavvyAC.this, () -> fallProtection.remove(uuid), 80L);
 
                         if (executeBan) {
@@ -203,25 +202,26 @@ public class MineHavvyAC extends JavaPlugin implements CommandExecutor {
         if (args[0].equalsIgnoreCase("test") && args.length >= 2) {
             Player target = Bukkit.getPlayer(args[1]);
             if (target == null) {
-                sender.sendMessage("§8[§6§lMineHavvy AC§8] §cOyuncu bulunamadı!");
+                sender.sendMessage("§8[§6§lMineHavvy AC§8] §cOyuncu çevrimiçi değil!");
                 return true;
             }
-            sender.sendMessage("§8[§6§lMineHavvy AC§8] §e" + target.getName() + " §aüzerinde test başlatıldı!");
             startLlamaPunishment(target, "Test Cezası", false);
+            sender.sendMessage("§8[§6§lMineHavvy AC§8] §e" + target.getName() + " §aiçin Lama ceza testi başlatıldı.");
             return true;
         }
 
         if (args[0].equalsIgnoreCase("temizle") && args.length >= 2) {
             Player target = Bukkit.getPlayer(args[1]);
             if (target == null) {
-                sender.sendMessage("§8[§6§lMineHavvy AC§8] §cOyuncu bulunamadı!");
+                sender.sendMessage("§8[§6§lMineHavvy AC§8] §cOyuncu çevrimiçi değil!");
                 return true;
             }
             violations.remove(target.getUniqueId());
-            sender.sendMessage("§8[§6§lMineHavvy AC§8] §e" + target.getName() + " §aadlı oyuncunun uyarı puanları temizlendi.");
+            sender.sendMessage("§8[§6§lMineHavvy AC§8] §e" + target.getName() + " §aadlı oyuncunun uyarı puanı sıfırlandı.");
             return true;
         }
 
+        sender.sendMessage("§8[§6§lMineHavvy AC§8] §cHatalı kullanım! Komutlar için /mhac yazın.");
         return true;
     }
 }
